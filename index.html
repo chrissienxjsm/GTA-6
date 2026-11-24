@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Leonida Sim">
+<meta name="theme-color" content="#0d0518"><title>Leonida Cinematic Simulator (Unofficial)</title>
+<link rel="apple-touch-icon" id="ic" href="">
+<style>
+:root{--bg:#0d0518;--pk:#ff3c8e;--vi:#8a3dff;--or:#ff9a4d;--tl:#2de2c8;--tx:#fff4fb;--mo:1;--mt:.78;--fs:16px;--bs:48px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#000;color:var(--tx);font:var(--fs)/1.4 "Avenir Next","Futura","Trebuchet MS",sans-serif;overscroll-behavior:none;touch-action:manipulation}
+body{position:fixed;inset:0;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.scr{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column}
+.scr.on{display:flex}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;min-height:var(--bs)}
+.btn{padding:0 28px;border:1px solid var(--pk);border-radius:999px;background:rgba(255,60,142,.12);letter-spacing:.12em;transition:.2s}
+.btn:active,.btn.hot{background:var(--pk)}
+.btn.sm{min-height:40px;padding:0 18px;font-size:.85em}
+h1,h2,h3{margin:0;font-weight:800;letter-spacing:.04em}
+.sky{position:absolute;inset:0;background:linear-gradient(#1a0836,#6a1b7a 45%,#ff5c8a 70%,#ffb15c 85%,#2b0b3f 85.1%);z-index:-1}
+.sky.a{animation:drift calc(24s/var(--mo)) linear infinite alternate;background-size:100% 140%}
+@keyframes drift{to{background-position:0 30%}}
+.sun{position:absolute;left:50%;bottom:15%;width:30vmin;height:30vmin;margin-left:-15vmin;border-radius:50%;background:linear-gradient(#ffe36e,#ff4f9a);opacity:.8;z-index:-1;clip-path:inset(0 0 8% 0)}
+.palms{position:absolute;bottom:0;left:0;right:0;height:22%;background:linear-gradient(#2b0b3f,#0d0518);z-index:-1}
+.title{font-size:clamp(34px,8vw,84px);background:linear-gradient(90deg,var(--or),var(--pk),var(--vi));-webkit-background-clip:text;background-clip:text;color:transparent;text-align:center}
+.sub{opacity:.75;font-size:.85em;letter-spacing:.2em;text-align:center}
+#fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .8s;z-index:50}
+#fade.on{opacity:1}
+/* video */
+#vid{background:#000;flex-direction:row;align-items:stretch;justify-content:flex-start}
+#strip{width:60px;display:flex;flex-direction:column;align-items:center;padding-top:8px;background:#000;flex:none}
+#strip button{width:44px;height:44px;min-height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.3);font-size:20px}
+#plw{flex:1;position:relative;background:#000}
+#plw iframe,#pl{position:absolute;inset:0;width:100%;height:100%}
+#skip{position:absolute;right:calc(10px + env(safe-area-inset-right));bottom:calc(10px + env(safe-area-inset-bottom));z-index:5}
+.ov{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(0,0,0,.82);z-index:6;text-align:center;padding:20px}
+.ov.on{display:flex}
+.spin{width:44px;height:44px;border:4px solid rgba(255,255,255,.2);border-top-color:var(--pk);border-radius:50%;animation:sp 1s linear infinite;display:none;position:absolute;top:50%;left:50%;margin:-22px;z-index:4;pointer-events:none}
+.spin.on{display:block}@keyframes sp{to{transform:rotate(360deg)}}
+/* loading */
+.scene{position:absolute;inset:0;opacity:0;transition:opacity 1.6s;z-index:-1}.scene.on{opacity:1}
+#bar{width:min(480px,70vw);height:3px;background:rgba(255,255,255,.2);margin:14px 0}#bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pk),var(--or))}
+/* menu */
+.menu{display:flex;flex-direction:column;gap:2px;align-items:flex-start;max-height:80%;overflow:auto}
+.menu button{text-align:left;padding:0 16px;font-size:1.15em;letter-spacing:.08em;border-left:3px solid transparent;min-width:260px;min-height:calc(var(--bs) - 6px)}
+.menu button:active,.menu button:hover{border-color:var(--pk);background:linear-gradient(90deg,rgba(255,60,142,.35),transparent)}
+#panel{position:fixed;inset:0;z-index:30;display:none;background:rgba(10,3,20,var(--mt));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);flex-direction:column;padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))}
+#panel.on{display:flex}
+#ph{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+#tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-bottom:8px}
+#tabs button{flex:none;padding:0 14px;min-height:40px;border-radius:8px;font-size:.85em;opacity:.7}#tabs .cur{background:var(--pk);opacity:1}
+#pb{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
+.card{border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:12px 14px;margin:0 0 8px;background:rgba(255,255,255,.05)}
+.row{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;margin:6px 0}
+.tag{font-size:.7em;padding:2px 8px;border-radius:99px;background:var(--tl);color:#04211d}.tag.s{background:var(--or);color:#2a1200}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.art{height:120px;border-radius:12px;display:flex;align-items:flex-end;padding:8px;font-size:.85em}
+input[type=range]{width:200px;accent-color:var(--pk)}input[type=text]{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;padding:8px;font:inherit;user-select:text;-webkit-user-select:text}
+.pbar{height:6px;background:rgba(255,255,255,.15);border-radius:3px;display:flex;overflow:hidden}.pbar i{flex:1}.pbar i.w{background:var(--tl)}
+#dlg{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center}#dlg.on{display:flex}
+#dlg div{background:#1a0b2e;border:1px solid var(--pk);border-radius:18px;padding:22px;max-width:420px;text-align:center}
+#dlg .row{justify-content:center}
+#port{position:fixed;inset:0;z-index:70;background:#0d0518;display:none;align-items:center;justify-content:center;text-align:center;padding:30px;font-size:1.2em}
+@media (orientation:portrait){#port{display:flex}}
+body.hc{--bg:#000;--tx:#fff;--mt:.97}body.hc .card{border-color:#fff}
+body.nm *{animation:none!important;transition:none!important}
+svg text{fill:#fff;font-size:11px}
+</style></head><body>
+<div id="port">Rotate your device to landscape for the best experience.</div>
+
+<!-- opening -->
+<section class="scr on" id="s0" style="background:#000"><button class="btn" id="start">START</button><p class="sub" style="position:absolute;bottom:14px">Unofficial fan project. Not affiliated with Rockstar Games.</p></section>
+
+<!-- video -->
+<section class="scr" id="vid"><div id="strip"><button id="mbtn" aria-label="Menu">☰</button></div>
+<div id="plw"><div id="pl"></div><div class="spin" id="sp"></div><button class="btn sm" id="skip" style="display:none">SKIP</button>
+<div class="ov" id="tap"><h2>Tap to play with sound</h2><p class="sub">Your device blocked automatic playback.</p><button class="btn" id="tapb">CONTINUE</button><button class="btn sm" id="tr">Troubleshoot audio</button></div>
+<div class="ov" id="err"><h2>Video unavailable</h2><p id="errm" class="sub"></p><div class="row"><button class="btn sm" id="e1">RETRY</button><button class="btn sm" id="e2">MAIN MENU</button><button class="btn sm" id="e3">OPEN ORIGINAL</button><button class="btn sm" id="e4">CHECK CONNECTION</button></div></div></div></section>
+
+<!-- loading -->
+<section class="scr" id="ld"><div id="scenes"></div><h2 class="title" style="font-size:clamp(24px,5vw,48px)">LEONIDA</h2><div id="bar"><i></i></div><div id="pct" style="font-size:1.4em">0%</div><p class="sub" id="tip" style="max-width:500px;margin-top:18px"></p></section>
+
+<!-- main menu -->
+<section class="scr" id="mm" style="align-items:flex-start;padding:0 8vw"><div class="sky a"></div><div class="sun"></div><div class="palms"></div>
+<h1 class="title" style="text-align:left;margin-bottom:6px">LEONIDA</h1><p class="sub" style="text-align:left;margin:0 0 14px">UNOFFICIAL CINEMATIC SIMULATOR</p><div class="menu" id="mmenu"></div></section>
+
+<div id="panel"><div id="ph"><button class="btn sm" id="back">BACK</button><h2 id="pt"></h2></div><div id="tabs"></div><div id="pb"></div></div>
+<div id="dlg"><div><p id="dm"></p><div class="row" id="db"></div></div></div>
+<div id="fade"></div>
+
+<script>
+const $=s=>document.querySelector(s),LS=localStorage;
+const IDS=['l4ukT5Ie-Go','rz1B4B2yBZY','R97EoVD1nr4'];
+const jget=(k,d)=>{try{return JSON.parse(LS.getItem(k))||d}catch(e){return d}},jset=(k,v)=>{try{LS.setItem(k,JSON.stringify(v))}catch(e){}};
+const DEF={vol:100,mute:false,mt:.78,fs:16,bs:48,mo:1,rm:false,hc:false,auto:true,autosave:true,skip:false,cc:false,anim:true};
+let S=Object.assign({},DEF,jget('lc_set',{})),SV=jget('lc_sv',{slots:[null,null,null,null,null],auto:null}),PR=jget('lc_pr',{b:Array(100).fill(0),bm:[],watch:0,t:0,dur:0});
+const sv=()=>jset('lc_sv',SV),svp=()=>jset('lc_pr',PR),svs=()=>jset('lc_set',S);
+function applyS(){const r=document.documentElement.style;r.setProperty('--mt',S.mt);r.setProperty('--fs',S.fs+'px');r.setProperty('--bs',S.bs+'px');r.setProperty('--mo',S.anim?1:.01);
+ document.body.classList.toggle('hc',S.hc);document.body.classList.toggle('nm',S.rm||matchMedia('(prefers-reduced-motion:reduce)').matches);
+ if(P&&P.setVolume){try{P.setVolume(S.vol);S.mute?P.mute():P.unMute()}catch(e){}}}
+let P=null,cur=0,seq=0,mode='open',slot='auto',tick=null,wait=null,t0=0,pausedAt=0,inPause=false,ytReady=false;
+const fade=on=>{$('#fade').classList.toggle('on',on);return new Promise(r=>setTimeout(r,on?850:50))};
+function show(id){document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));$('#'+id).classList.add('on')}
+function ask(m,btns){return new Promise(res=>{$('#dm').textContent=m;const b=$('#db');b.innerHTML='';btns.forEach(([l,v])=>{const e=document.createElement('button');e.className='btn sm';e.textContent=l;e.onclick=()=>{$('#dlg').classList.remove('on');res(v)};b.append(e)});$('#dlg').classList.add('on')})}
+// icon
+(()=>{const c=document.createElement('canvas');c.width=c.height=180;const x=c.getContext('2d');let g=x.createLinearGradient(0,0,0,180);g.addColorStop(0,'#1a0836');g.addColorStop(.55,'#ff3c8e');g.addColorStop(1,'#ff9a4d');x.fillStyle=g;x.fillRect(0,0,180,180);x.fillStyle='#ffe36e';x.beginPath();x.arc(90,105,38,Math.PI,0);x.fill();x.fillStyle='#2b0b3f';x.fillRect(0,105,180,75);x.strokeStyle='#2b0b3f';x.lineWidth=7;x.beginPath();x.moveTo(55,150);x.quadraticCurveTo(60,90,95,60);x.stroke();for(let a=-2;a<3;a++){x.beginPath();x.moveTo(95,60);x.quadraticCurveTo(95+a*22,38,95+a*30,70);x.stroke()}$('#ic').href=c.toDataURL()})();
+// YouTube API
+const ys=document.createElement('script');ys.src='https://www.youtube.com/iframe_api';ys.onerror=()=>{ytReady='fail'};document.head.append(ys);
+window.onYouTubeIframeAPIReady=()=>{ytReady=true};
+function destroyP(){clearInterval(tick);clearTimeout(wait);if(P){try{P.stopVideo();P.destroy()}catch(e){}P=null}const w=$('#plw');const old=$('#pl');if(old)old.remove();const d=document.createElement('div');d.id='pl';w.prepend(d)}
+function loadVid(i,start){
+ destroyP();cur=i;const my=++seq;['#tap','#err'].forEach(s=>$(s).classList.remove('on'));$('#skip').style.display=i===1?'block':'none';
+ if(ytReady!==true){return vErr(ytReady==='fail'?'Could not reach YouTube. Check your internet connection.':'Player still loading. Retry in a moment.')}
+ P=new YT.Player('pl',{videoId:IDS[i],playerVars:{playsinline:1,rel:0,enablejsapi:1,autoplay:1,start:Math.floor(start||0),cc_load_policy:S.cc?1:0,origin:location.origin.startsWith('http')?location.origin:undefined,fs:1},
+ events:{onReady:e=>{if(my!==seq)return;applyS();e.target.playVideo();wait=setTimeout(()=>{if(my===seq&&P&&![1,3].includes(P.getPlayerState()))$('#tap').classList.add('on')},2500)},
+ onStateChange:e=>{if(my!==seq)return;const s=e.data;$('#sp').classList.toggle('on',s===3);if(s===1){$('#tap').classList.remove('on');$('#err').classList.remove('on');startTick()}
+  if(s===2&&i===2&&!inPause)saveNow('auto');if(s===0)ended()},
+ onError:e=>{if(my!==seq)return;const m={2:'Invalid video request.',5:'Playback error in HTML5 player.',100:'This video was removed or is private.',101:'Embedding is disabled for this video.',150:'Embedding is disabled for this video.'};vErr(m[e.data]||'Unknown error.')}}});
+}
+function vErr(m){$('#errm').textContent=m;$('#err').classList.add('on');$('#sp').classList.remove('on')}
+function startTick(){clearInterval(tick);let n=0;tick=setInterval(()=>{if(!P||!P.getCurrentTime||P.getPlayerState()!==1)return;if(cur===2){const t=P.getCurrentTime(),d=P.getDuration();PR.t=t;PR.dur=d;PR.watch+=1;if(d>0)PR.b[Math.min(99,Math.floor(t/d*100))]=1;if(++n%5===0){svp();if(S.autosave)saveNow('auto',1)}}},1000)}
+async function ended(){clearInterval(tick);
+ if(cur===0){await fade(1);show('vid');loadVid(1);await fade(0)}
+ else if(cur===1){await toLoad()}
+ else{PR.t=0;PR.b.fill(1);svp();saveNow('auto',1);await fade(1);destroyP();toMenu();await fade(0)}}
+$('#start').onclick=async()=>{await fade(1);show('vid');mode='open';if(S.skip){destroyP();await toLoad(1);return}loadVid(0);await fade(0)};
+$('#skip').onclick=()=>{toLoad()};
+$('#tapb').onclick=()=>{$('#tap').classList.remove('on');if(P)P.playVideo();wait=setTimeout(()=>{if(P&&![1,3].includes(P.getPlayerState()))$('#tap').classList.add('on')},2500)};
+$('#tr').onclick=()=>ask('Check that the silent switch is off, raise the volume with the physical buttons, then tap Continue. If audio still fails, reload the page and press Start again.',[['OK',1]]);
+$('#e1').onclick=()=>{const t=PR.t;if(ytReady==='fail'){location.reload();return}loadVid(cur,cur===2?t:0)};
+$('#e2').onclick=async()=>{await fade(1);destroyP();toMenu();await fade(0)};
+$('#e3').onclick=()=>window.open('https://www.youtube.com/watch?v='+IDS[cur],'_blank');
+$('#e4').onclick=()=>ask(navigator.onLine?'Your device reports it is online. Try Retry.':'You appear to be offline. Reconnect, then press Retry.',[['OK',1]]);
+addEventListener('offline',()=>{if($('#vid').classList.contains('on')&&cur===2){if(P&&P.getCurrentTime)PR.t=P.getCurrentTime();svp();vErr('Connection lost. Your position is remembered. Reconnect, then press Retry.')}});
+// loading
+const TIPS=['Tap the menu icon beside the video to pause and open the menu.','Progress saves automatically. Manual saves live in the Save tab.','Volume: use the sliders in Settings, or your device volume buttons on iOS.','Bookmark moments from the Story tab to build your own chapters.','Continue resumes the last auto-saved position.'];
+const SC=['linear-gradient(#1a0836,#ff4f9a 60%,#ffb15c)','linear-gradient(#071a2e,#0fa3a3 55%,#ffd28a)','linear-gradient(#0d0518,#4b1d7a 50%,#ff2f7a)','linear-gradient(#0a1f12,#2b6b4a 60%,#c9b458)','linear-gradient(#10052a,#2a2ad0 45%,#2de2c8)','linear-gradient(#240a1a,#a02a50 55%,#ff9a4d)'];
+async function toLoad(quick){await fade(1);destroyP();show('ld');$('#scenes').innerHTML=SC.map((g,i)=>`<div class="scene${i?'':' on'}" style="background:${g}"></div>`).join('');let k=0,ti=0;$('#tip').textContent=TIPS[0];
+ const rot=setInterval(()=>{const sc=document.querySelectorAll('.scene');sc[k].classList.remove('on');k=(k+1)%sc.length;sc[k].classList.add('on');$('#tip').textContent=TIPS[++ti%TIPS.length]},3500);
+ await fade(0);let p=0;const t1=Date.now();
+ await new Promise(res=>{const iv=setInterval(()=>{const ready=document.readyState==='complete'&&ytReady===true||Date.now()-t1>9000;p=Math.min(ready?100:92,p+(ready?3:1.2)*(quick?3:1));$('#bar i').style.width=p+'%';$('#pct').textContent=Math.floor(p)+'%';if(p>=100&&Date.now()-t1>(quick?800:5000)){clearInterval(iv);res()}},60)});
+ clearInterval(rot);await fade(1);toMenu();await fade(0)}
+// main menu
+function toMenu(){mode='menu';inPause=false;closePanel(1);show('mm');const it=[['Start Story Experience',()=>playStory(0,'auto')],['Continue',cont],['Load Save',()=>openP('Load Save',['load'])],['Settings',()=>openP('Settings',['settings'])],['Gallery',()=>openP('Gallery',['gallery'])],['Explore Leonida',()=>openP('Explore Leonida',['map','world'])],['Characters',()=>openP('Characters',['chars'])],['Credits',()=>openP('Credits',['credits'])],['Exit',exitApp]];
+ const m=$('#mmenu');m.innerHTML='';it.forEach(([l,f])=>{const b=document.createElement('button');b.textContent=l;b.onclick=f;m.append(b)})}
+async function exitApp(){await fade(1);destroyP();show('s0');await fade(0)}
+async function cont(){const s=latest();if(!s){ask('No saved progress yet. Start the Story Experience first.',[['OK',1]]);return}playStory(s.t,s.key,true)}
+function latest(){const a=[SV.auto&&{...SV.auto,key:'auto'},...SV.slots.map((s,i)=>s&&{...s,key:i})].filter(Boolean);return a.sort((x,y)=>y.played-x.played)[0]}
+async function playStory(t,key,fromSave){mode='story';slot=key;if(!fromSave&&key==='auto'&&latest()&&t===0){}closePanel(1);await fade(1);show('vid');$('#strip').style.display='flex';PR.t=t;loadVid(2,t);await fade(0)}
+// saves
+function snap(name,old){const t=P&&P.getCurrentTime?P.getCurrentTime():PR.t,d=(P&&P.getDuration?P.getDuration():0)||PR.dur;return{name:name||(old&&old.name)||'Autosave',created:(old&&old.created)||Date.now(),played:Date.now(),watch:PR.watch,t,dur:d,pct:d?Math.round(t/d*100):0}}
+function saveNow(k,silent){if(P&&P.getCurrentTime)PR.t=P.getCurrentTime();if(k==='auto')SV.auto=snap('Autosave',SV.auto);else SV.slots[k]=snap(SV.slots[k]?SV.slots[k].name:'Save '+(k+1),SV.slots[k]);sv();svp()}
+const fm=s=>{s=Math.floor(s||0);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return(h?h+':'+String(m).padStart(2,'0'):m)+':'+String(s%60).padStart(2,'0')},fd=d=>new Date(d).toLocaleString();
+// pause menu
+$('#mbtn').onclick=()=>{if(!P||!P.pauseVideo)return;inPause=true;try{pausedAt=P.getCurrentTime();P.pauseVideo()}catch(e){}PR.t=pausedAt;saveNow('auto',1);openP('Paused',['resume','map','story','save','load','settings','gallery','restart','saveexit','exitmenu'],1)};
+async function resume(){closePanel();inPause=false;if(P){try{if(Math.abs(P.getCurrentTime()-pausedAt)>2)P.seekTo(pausedAt,true);P.playVideo()}catch(e){}}}
+// panels
+const NAMES={resume:'Resume',map:'Map',world:'World Info',story:'Story',save:'Save',load:'Load',settings:'Settings',gallery:'Gallery',restart:'Restart',saveexit:'Save and Exit',exitmenu:'Exit to Main Menu',chars:'Characters',credits:'Credits'};
+let tabs=[],tab='',fromPause=0;
+function openP(title,t,pz){tabs=t;fromPause=pz||0;$('#pt').textContent=title;$('#panel').classList.add('on');selTab(t[0])}
+function closePanel(){$('#panel').classList.remove('on')}
+$('#back').onclick=()=>{if(fromPause&&inPause)resume();else closePanel()};
+async function selTab(k){tab=k;if(k==='resume')return resume();
+ if(k==='restart'){if(await ask('Restart from the beginning? Unsaved progress will be lost.',[['Cancel',0],['Restart',1]])){closePanel();inPause=false;PR.t=0;P.seekTo(0,true);P.playVideo()}else selTab('story');return}
+ if(k==='saveexit'){saveNow(slot==='auto'?'auto':slot);return leave()}
+ if(k==='exitmenu'){const r=await ask('Save your progress before leaving?',[['Cancel',0],['Don\'t save',1],['Save',2]]);if(r===0)return;if(r===2)saveNow(slot==='auto'?'auto':slot);return leave()}
+ const T=$('#tabs');T.innerHTML='';tabs.filter(x=>!['resume','restart','saveexit','exitmenu'].includes(x)||0).forEach(x=>{const b=document.createElement('button');b.textContent=NAMES[x];if(x===k)b.className='cur';b.onclick=()=>selTab(x);T.append(b)});
+ if(fromPause){tabs.filter(x=>['resume','restart','saveexit','exitmenu'].includes(x)).forEach(x=>{const b=document.createElement('button');b.textContent=NAMES[x];b.onclick=()=>selTab(x);T.append(b)})}
+ const B=$('#pb');B.innerHTML='';B.scrollTop=0;R[k](B)}
+async function leave(){closePanel();inPause=false;await fade(1);destroyP();toMenu();await fade(0)}
+const el=(h)=>{const d=document.createElement('div');d.className='card';d.innerHTML=h;return d};
+function slotRow(B,k,load){const s=k==='auto'?SV.auto:SV.slots[k];const c=el('');const nm=k==='auto'?'Autosave':'Slot '+(k+1);
+ c.innerHTML=s?`<div class="row"><b>${nm}: ${s.name.replace(/</g,'&lt;')}</b><span>${s.pct}% · ${fm(s.t)} / ${fm(s.dur)}</span></div><div class="sub" style="text-align:left;letter-spacing:0">Created ${fd(s.created)} · Last played ${fd(s.played)} · Viewing time ${fm(s.watch)}</div><div class="row"></div>`:`<div class="row"><b>${nm}</b><span class="sub">Empty</span></div><div class="row"></div>`;
+ const r=c.lastChild,add=(l,f)=>{const b=document.createElement('button');b.className='btn sm';b.textContent=l;b.onclick=f;r.append(b)};
+ if(load){if(s)add('LOAD',()=>playStory(s.t,k,true))}
+ else{add(s?'OVERWRITE':'SAVE HERE',async()=>{if(s&&!await ask('Overwrite '+nm+'?',[['Cancel',0],['Overwrite',1]]))return;saveNow(k);selTab('save')})}
+ if(s&&k!=='auto'){add('RENAME',async()=>{const n=prompt('Save name',s.name);if(n){SV.slots[k].name=n.slice(0,30);sv();selTab(tab)}});add('DELETE',async()=>{if(await ask('Delete '+nm+'?',[['Cancel',0],['Delete',1]])){SV.slots[k]=null;sv();selTab(tab)}})}
+ if(s&&k==='auto'&&load){add('DELETE',async()=>{if(await ask('Delete autosave?',[['Cancel',0],['Delete',1]])){SV.auto=null;sv();selTab(tab)}})}
+ B.append(c)}
+const R={
+ load:B=>{slotRow(B,'auto',1);for(let i=0;i<5;i++)slotRow(B,i,1)},
+ save:B=>{if(!P||!P.getCurrentTime){B.append(el('Saving is available while watching the Story Experience.'));return}for(let i=0;i<5;i++)slotRow(B,i,0)},
+ gallery:B=>{const g=document.createElement('div');g.className='g';SC.forEach((c,i)=>{const d=document.createElement('div');d.className='art';d.style.background=c;d.textContent=['Sunset skyline','Keys at dusk','Neon avenue','Grassrivers swamp','Ocean drive night','Port at dawn'][i];g.append(d)});B.append(g,el('<span class="sub" style="letter-spacing:0">Original schematic artwork made for this fan project. Not official Rockstar artwork.</span>'))},
+ chars:B=>{[['Jason Duval','One of two playable protagonists confirmed by Rockstar Games for Grand Theft Auto VI. Shown in the official trailers.'],['Lucia Caminos','The other confirmed protagonist, introduced in Trailer 1. Rockstar has described the duo as a story of partners on the run in Leonida.']].forEach(([n,d])=>B.append(el(`<h3>${n} <span class="tag">Confirmed</span></h3><p>${d}</p><p class="sub" style="text-align:left;letter-spacing:0">Further details are not officially published here and none are invented.</p>`)))},
+ credits:B=>{B.append(el('<h3>Unofficial fan project</h3><p>This is not an official Rockstar Games release or a native iOS version of GTA VI. Grand Theft Auto and related names belong to Rockstar Games / Take-Two Interactive. Videos are streamed from YouTube through the official IFrame Player API; no footage is hosted or modified here. The Story Experience is prerecorded footage, not gameplay.</p>'))},
+ story:B=>{const t=P&&P.getCurrentTime?P.getCurrentTime():PR.t,d=(P&&P.getDuration?P.getDuration():0)||PR.dur,pc=d?Math.round(t/d*100):0;
+  B.append(el(`<div class="row"><b>Position</b><span>${fm(t)} / ${fm(d)} (${pc}%)</span></div><div class="pbar">${PR.b.map(x=>'<i class="'+(x?'w':'')+'"></i>').join('')}</div><p class="sub" style="text-align:left;letter-spacing:0">Teal sections are watched. Watching the video does not mean completing a game.</p>`));
+  const c=el('<div class="row"><b>Bookmarks</b></div>');const ab=document.createElement('button');ab.className='btn sm';ab.textContent='BOOKMARK THIS MOMENT';ab.onclick=()=>{const n=prompt('Chapter name','Moment '+(PR.bm.length+1));if(n){PR.bm.push({n:n.slice(0,30),t});PR.bm.sort((a,b)=>a.t-b.t);svp();selTab('story')}};c.firstChild.append(ab);
+  PR.bm.forEach((b,i)=>{const r=document.createElement('div');r.className='row';r.innerHTML=`<span>${b.n.replace(/</g,'&lt;')} · ${fm(b.t)}</span>`;const go=document.createElement('button');go.className='btn sm';go.textContent='GO';go.onclick=()=>{if(P&&P.seekTo){inPause=false;closePanel();P.seekTo(b.t,true);P.playVideo()}else playStory(b.t,'auto')};const del=document.createElement('button');del.className='btn sm';del.textContent='REMOVE';del.onclick=()=>{PR.bm.splice(i,1);svp();selTab('story')};r.append(go,del);c.append(r)});
+  if(!PR.bm.length)c.append(Object.assign(document.createElement('p'),{className:'sub',textContent:'No chapters found for this video. Add your own bookmarks.'}));B.append(c);
+  const rs=document.createElement('button');rs.className='btn sm';rs.textContent='RESTART EXPERIENCE';rs.onclick=()=>selTab('restart');if(fromPause)B.append(rs)},
+ map:B=>{const L=LOC;const w=document.createElement('div');w.innerHTML=`<svg viewBox="0 0 400 260" style="width:100%;max-height:48vh;background:#1a0b2e;border-radius:14px"><path d="M60 20 L330 20 L350 80 L300 130 L330 200 L250 240 L180 215 L120 240 L80 160 L90 90Z" fill="#3a1b5e" stroke="#ff3c8e"/>${L.map((l,i)=>`<g data-i="${i}" style="cursor:pointer"><circle cx="${l.x}" cy="${l.y}" r="14" fill="${l.c?'#2de2c8':'#ff9a4d'}" opacity=".9"/><text x="${l.x+16}" y="${l.y+4}">${l.n}</text></g>`).join('')}</svg><div id="li"></div><p class="sub" style="text-align:left;letter-spacing:0">Schematic fan map, not Rockstar's map. Teal = officially named, orange = speculative.</p>`;B.append(w);const show=i=>{const l=L[i];$('#li').innerHTML=`<div class="card"><h3>${l.n} <span class="tag ${l.c?'':'s'}">${l.c?'Confirmed name':'Speculative'}</span></h3><p>${l.d}</p></div>`};w.querySelectorAll('g').forEach(g=>g.onclick=()=>show(+g.dataset.i));show(0)},
+ world:B=>{B.append(el('<h3>Atmosphere</h3><p>Rockstar\'s trailers show neon-lit nights, beaches, highways, swamps, boats and wildlife in a Florida-inspired state. <span class="tag">Confirmed</span></p><p>Specific vehicle lists, wildlife species and architecture details beyond what the trailers show are fan interpretation. <span class="tag s">Speculative</span></p>'));LOC.forEach(l=>B.append(el(`<b>${l.n}</b> <span class="tag ${l.c?'':'s'}">${l.c?'Confirmed name':'Speculative'}</span><p>${l.d}</p>`)))},
+ settings:B=>{const sec=t=>B.append(Object.assign(document.createElement('h3'),{textContent:t,style:'margin:14px 0 6px'}));
+  const sl=(l,k,mn,mx,st,f)=>{const c=el(`<div class="row"><span>${l}</span><input type="range" min="${mn}" max="${mx}" step="${st}" value="${S[k]}"></div>`);c.querySelector('input').oninput=e=>{S[k]=+e.target.value;svs();applyS();f&&f()};B.append(c)};
+  const tg=(l,k,f)=>{const c=el(`<div class="row"><span>${l}</span><button class="btn sm">${S[k]?'ON':'OFF'}</button></div>`);const b=c.querySelector('button');b.onclick=()=>{S[k]=!S[k];b.textContent=S[k]?'ON':'OFF';svs();applyS();f&&f()};B.append(c)};
+  sec('Audio');sl('Master volume','vol',0,100,1);tg('Mute','mute');B.append(el('<span class="sub" style="letter-spacing:0">On iPhone and iPad, volume may only respond to the physical volume buttons. The original soundtrack is always preserved.</span>'));
+  sec('Display');const fsb=el('<div class="row"><span>Fullscreen</span><button class="btn sm">TOGGLE</button></div>');fsb.querySelector('button').onclick=()=>{const e=document.documentElement;if(document.fullscreenElement)document.exitFullscreen();else if(e.requestFullscreen||e.webkitRequestFullscreen)call(e);else ask('Fullscreen is limited on iPhone Safari. Add to Home Screen for a fullscreen app, or use the video\'s own fullscreen button.',[['OK',1]])};B.append(fsb);
+  sl('Menu transparency (higher = darker)','mt',.4,.97,.01);tg('Reduced motion','rm');tg('Menu animations','anim');
+  B.append(el('<span class="sub" style="letter-spacing:0">Video quality is chosen automatically by YouTube and cannot be forced. Nothing here upscales prerecorded footage.</span>'));
+  sec('Interface');sl('Text size','fs',13,24,1);sl('Button size','bs',40,68,2);
+  sec('Playback');tg('Auto-continue to next video','auto');tg('Automatic saving','autosave');tg('Skip opening videos on Start','skip');tg('Subtitles when available (applies next load)','cc');
+  const o=el('<div class="row"><span>Opening sequence</span><button class="btn sm">RESTART OPENING</button></div>');o.querySelector('button').onclick=async()=>{closePanel();await fade(1);destroyP();inPause=false;show('vid');$('#strip').style.display='none';loadVid(0);await fade(0)};B.append(o);
+  sec('Accessibility');tg('High-contrast menus','hc');
+  const rd=el('<div class="row"><span>Restore defaults</span><button class="btn sm">RESET</button></div>');rd.querySelector('button').onclick=async()=>{if(await ask('Restore all settings to default?',[['Cancel',0],['Restore',1]])){S={...DEF};svs();applyS();selTab('settings')}};B.append(rd)}};
+const LOC=[{n:'Leonida',x:200,y:130,c:1,d:'The fictional US state where Grand Theft Auto VI is set, inspired by Florida.'},{n:'Vice City',x:260,y:75,c:1,d:'The neon, beach-lined city returning from earlier games in the series, shown in the trailers.'},{n:'Leonida Keys',x:150,y:225,c:1,d:'An island chain at the southern end of the state, named by Rockstar.'},{n:'Grassrivers',x:120,y:120,c:1,d:'A swampland region, named by Rockstar and shown in trailer footage.'},{n:'Port Gellhorn',x:290,y:165,c:1,d:'A named location in Leonida. Rockstar has shared little detail beyond the name.'},{n:'Ambrosia',x:95,y:55,c:1,d:'A named location in Leonida. Rockstar has shared little detail beyond the name.'},{n:'Mount Kalaga National Park',x:190,y:50,c:1,d:'A named national park area in the state. Exact placement on this schematic is invented.'}];
+function call(e){const f=e.requestFullscreen||e.webkitRequestFullscreen;f.call(e)}
+// init
+addEventListener('pagehide',()=>{if(cur===2&&P&&P.getCurrentTime){saveNow('auto',1)}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&cur===2&&P&&P.getCurrentTime&&mode==='story')saveNow('auto',1)});
+document.addEventListener('touchmove',e=>{if(!e.target.closest('#pb,.menu,#tabs,iframe'))e.preventDefault()},{passive:false});
+applyS();
+</script></body></html>
